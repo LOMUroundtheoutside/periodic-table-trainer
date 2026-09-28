@@ -24,6 +24,9 @@
   section.on{display:block}
   .bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:10px 0 14px}
   .bar .lbl{color:var(--muted);margin-right:4px}
+  .custom{display:inline-flex;gap:6px;align-items:center}
+  .custom input{width:84px;font-size:.95rem;padding:6px 10px;border-radius:999px;border:1px solid #2b3154;background:var(--panel);color:var(--ink)}
+  .custom input:focus{outline:2px solid var(--accent)}
   .card{background:var(--panel);border:1px solid #2b3154;border-radius:14px;padding:16px;margin:12px 0}
   .card h2{margin:0 0 8px;font-size:1.15rem}
   .card h3{margin:14px 0 6px;font-size:1rem;color:var(--accent)}
@@ -103,6 +106,9 @@
     <button class="chip" data-range="10">First 10</button>
     <button class="chip on" data-range="20">First 20</button>
     <button class="chip" data-range="118">All 118</button>
+    <span class="custom"><button class="chip" id="customChip">Custom</button>
+      <input type="number" id="customN" min="1" max="118" placeholder="e.g. 36" title="How many elements, from 1 up">
+      <button class="btn" id="customGo" style="padding:7px 12px">Go</button></span>
   </div>
 
   <section id="table" class="on">
@@ -345,8 +351,19 @@ range=store.get('range',20);
 
 /* tabs & range */
 $$('nav button').forEach(b=>b.onclick=()=>{tab=b.dataset.tab;$$('nav button').forEach(x=>x.classList.toggle('on',x===b));$$('main > section').forEach(s=>s.classList.toggle('on',s.id===tab));if(tab==='quiz')newQuestion();});
-function setRange(r){range=r;store.set('range',r);$$('[data-range]').forEach(x=>x.classList.toggle('on',+x.dataset.range===r));renderTable();renderLearn();resetQuiz();}
+const PRESETS=[5,10,20,118];
+function setRange(r){
+  r=Math.max(1,Math.min(118,Math.round(+r)||1));range=r;store.set('range',r);
+  $$('[data-range]').forEach(x=>x.classList.toggle('on',+x.dataset.range===r));
+  $('#customChip').classList.toggle('on',!PRESETS.includes(r));
+  if(!PRESETS.includes(r))$('#customN').value=r;
+  renderTable();renderLearn();resetQuiz();
+}
 $$('[data-range]').forEach(b=>b.onclick=()=>setRange(+b.dataset.range));
+const applyCustom=()=>{const v=$('#customN').value;if(v==='')$('#customN').focus();else{setRange(v);$('#customN').value=range;}};
+$('#customChip').onclick=()=>$('#customN').focus();
+$('#customGo').onclick=applyCustom;
+$('#customN').addEventListener('keydown',e=>{if(e.key==='Enter')applyCustom()});
 const rangeLabel=()=>range===118?'all 118 elements':`first ${range} elements`;
 
 /* table */
@@ -442,6 +459,7 @@ function orderQuestion(box,pool){
 
 /* boot */
 $$('[data-range]').forEach(x=>x.classList.toggle('on',+x.dataset.range===range));
+$('#customChip').classList.toggle('on',!PRESETS.includes(range));if(!PRESETS.includes(range))$('#customN').value=range;
 $('#ordRandom').classList.toggle('on',!seq);$('#ordSeq').classList.toggle('on',seq);
 renderTable();renderLearn();stats();
 </script>
