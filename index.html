@@ -1,0 +1,449 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Periodic Table Trainer</title>
+<style>
+  :root{
+    --bg:#0f1220; --panel:#181c30; --panel2:#20253f; --ink:#eef0ff; --muted:#9aa0c3;
+    --accent:#7c9cff; --good:#3ddc97; --bad:#ff6b6b; --dim:.22;
+    --ak:#ff7b7b; --ae:#ffb86b; --tm:#ffd86b; --pt:#9be37d; --md:#5fd8c8;
+    --nm:#6bc4ff; --hg:#b48bff; --ng:#ff8ad8; --la:#c9a0ff; --ac:#f5a3c7;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink);line-height:1.45}
+  header{padding:18px 20px 8px;display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 16px}
+  header h1{margin:0;font-size:1.5rem;letter-spacing:.3px}
+  header p{margin:0;color:var(--muted)}
+  nav{display:flex;gap:6px;padding:8px 20px;flex-wrap:wrap}
+  nav button,.chip{background:var(--panel);color:var(--ink);border:1px solid #2b3154;border-radius:999px;padding:7px 14px;font-size:.95rem;cursor:pointer}
+  nav button.on,.chip.on{background:var(--accent);color:#0b0e1c;border-color:var(--accent);font-weight:600}
+  main{padding:8px 20px 40px;max-width:1300px;margin:0 auto}
+  section{display:none}
+  section.on{display:block}
+  .bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:10px 0 14px}
+  .bar .lbl{color:var(--muted);margin-right:4px}
+  .card{background:var(--panel);border:1px solid #2b3154;border-radius:14px;padding:16px;margin:12px 0}
+  .card h2{margin:0 0 8px;font-size:1.15rem}
+  .card h3{margin:14px 0 6px;font-size:1rem;color:var(--accent)}
+  .muted{color:var(--muted)}
+  /* table */
+  .tablewrap{overflow-x:auto;padding-bottom:6px}
+  .ptable{display:grid;grid-template-columns:repeat(18,minmax(52px,1fr));grid-template-rows:repeat(7,auto) 14px auto auto;gap:4px;min-width:1010px}
+  .el{border-radius:7px;padding:4px 5px;min-height:56px;cursor:pointer;border:1px solid transparent;transition:transform .08s,opacity .2s;position:relative;color:#101427}
+  .el:hover{transform:scale(1.06);z-index:2;border-color:#fff}
+  .el.dim{opacity:var(--dim)}
+  .el .n{font-size:.62rem;opacity:.85}
+  .el .s{font-size:1.15rem;font-weight:700;line-height:1.1}
+  .el .enm{font-size:.58rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .el.sel{outline:3px solid #fff}
+  .ak{background:var(--ak)}.ae{background:var(--ae)}.tm{background:var(--tm)}.pt{background:var(--pt)}.md{background:var(--md)}
+  .nm{background:var(--nm)}.hg{background:var(--hg)}.ng{background:var(--ng)}.la{background:var(--la)}.ac{background:var(--ac)}
+  .legend{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:10px;font-size:.85rem}
+  .legend span::before{content:"";display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+  .legend .ak::before{background:var(--ak)}.legend .ae::before{background:var(--ae)}.legend .tm::before{background:var(--tm)}
+  .legend .pt::before{background:var(--pt)}.legend .md::before{background:var(--md)}.legend .nm::before{background:var(--nm)}
+  .legend .hg::before{background:var(--hg)}.legend .ng::before{background:var(--ng)}.legend .la::before{background:var(--la)}.legend .ac::before{background:var(--ac)}
+  .legend span{background:none!important;color:var(--ink)}
+  .detail{display:grid;grid-template-columns:auto 1fr;gap:6px 18px;align-items:center}
+  .detail .big{font-size:3rem;font-weight:800;width:110px;height:110px;border-radius:14px;display:flex;align-items:center;justify-content:center;color:#101427}
+  .detail dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:2px 12px}
+  .detail dt{color:var(--muted)}
+  /* learn */
+  .learnlist{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+  .lc{background:var(--panel2);border-radius:10px;padding:10px 12px;display:flex;gap:10px;align-items:center;cursor:pointer;user-select:none}
+  .lc .num{font-size:.8rem;color:var(--muted);width:24px}
+  .lc .sym{font-size:1.4rem;font-weight:700;width:40px}
+  .lc .name{font-size:.9rem}
+  .lc .hid{background:#2b3154;color:transparent;border-radius:6px}
+  .lc .hid.show{background:none;color:inherit}
+  /* quiz */
+  .q{font-size:1.5rem;margin:12px 0 4px}
+  .qsub{color:var(--muted)}
+  .opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin:14px 0}
+  .opts button{font-size:1.25rem;padding:14px;border-radius:12px;border:1px solid #2b3154;background:var(--panel2);color:var(--ink);cursor:pointer}
+  .opts button:hover{border-color:var(--accent)}
+  .opts button.good{background:var(--good);color:#062;border-color:var(--good)}
+  .opts button.bad{background:var(--bad);color:#400;border-color:var(--bad)}
+  .typed{display:flex;gap:8px;margin:12px 0}
+  .typed input{flex:1;font-size:1.3rem;padding:10px 12px;border-radius:10px;border:1px solid #2b3154;background:var(--panel2);color:var(--ink)}
+  .btn{background:var(--accent);color:#0b0e1c;border:0;border-radius:10px;padding:10px 16px;font-size:1rem;font-weight:600;cursor:pointer}
+  .btn.ghost{background:transparent;color:var(--ink);border:1px solid #2b3154}
+  .stats{display:flex;gap:18px;flex-wrap:wrap;color:var(--muted)}
+  .stats b{color:var(--ink)}
+  .feedback{min-height:1.6em;margin-top:6px;font-weight:600}
+  .feedback.good{color:var(--good)}.feedback.bad{color:var(--bad)}
+  .chain{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+  .chain span{background:var(--panel2);border-radius:6px;padding:3px 8px;font-weight:600}
+  .chain span.ok{background:var(--good);color:#062}.chain span.no{background:var(--bad);color:#400}
+  .mn{font-size:1.25rem;line-height:1.7}
+  .mn b{color:var(--accent)}
+  .chunks{display:flex;flex-wrap:wrap;gap:8px}
+  .chunks div{background:var(--panel2);border-radius:10px;padding:8px 12px;font-family:ui-monospace,monospace;font-size:1.05rem}
+  kbd{background:#2b3154;border-radius:4px;padding:1px 6px;font-size:.85em}
+  @media (max-width:600px){header h1{font-size:1.25rem} .q{font-size:1.25rem}}
+</style>
+</head>
+<body>
+<header>
+  <h1>⚗️ Periodic Table Trainer</h1>
+  <p>Learn the elements in chunks: first 5, first 10, first 20, then all 118.</p>
+</header>
+<nav>
+  <button data-tab="table" class="on">Table</button>
+  <button data-tab="learn">Learn</button>
+  <button data-tab="quiz">Quiz</button>
+  <button data-tab="mnemonics">Mnemonics &amp; tips</button>
+</nav>
+<main>
+  <div class="bar">
+    <span class="lbl">Range:</span>
+    <button class="chip" data-range="5">First 5</button>
+    <button class="chip" data-range="10">First 10</button>
+    <button class="chip on" data-range="20">First 20</button>
+    <button class="chip" data-range="118">All 118</button>
+  </div>
+
+  <section id="table" class="on">
+    <div class="card">
+      <h2>The table <span class="muted" id="tableHint"></span></h2>
+      <div class="tablewrap"><div class="ptable" id="ptable"></div></div>
+      <div class="legend">
+        <span class="ak">Alkali metal</span><span class="ae">Alkaline earth</span><span class="tm">Transition metal</span>
+        <span class="pt">Post-transition metal</span><span class="md">Metalloid</span><span class="nm">Non-metal</span>
+        <span class="hg">Halogen</span><span class="ng">Noble gas</span><span class="la">Lanthanide</span><span class="ac">Actinide</span>
+      </div>
+    </div>
+    <div class="card" id="detailCard">
+      <h2>Click an element</h2>
+      <p class="muted">Tap any tile to see its number, symbol, name, group and period.</p>
+    </div>
+  </section>
+
+  <section id="learn">
+    <div class="card">
+      <h2>Learn <span class="muted" id="learnHint"></span></h2>
+      <p class="muted">Read them through a few times, then hide the names or symbols and tap a card to reveal it. Say each one out loud, it sticks better.</p>
+      <div class="bar">
+        <button class="btn ghost" id="hideNames">Hide names</button>
+        <button class="btn ghost" id="hideSyms">Hide symbols</button>
+        <button class="btn ghost" id="showAll">Show everything</button>
+      </div>
+      <div class="learnlist" id="learnlist"></div>
+    </div>
+  </section>
+
+  <section id="quiz">
+    <div class="card">
+      <h2>Quiz <span class="muted" id="quizHint"></span></h2>
+      <div class="bar">
+        <span class="lbl">Mode:</span>
+        <button class="chip on" data-mode="n2s">Number → Symbol</button>
+        <button class="chip" data-mode="s2n">Symbol → Name</button>
+        <button class="chip" data-mode="n2sym">Name → Symbol</button>
+        <button class="chip" data-mode="order">Type them in order</button>
+      </div>
+      <div class="bar">
+        <span class="lbl">Question order:</span>
+        <button class="chip on" id="ordRandom">🔀 Random</button>
+        <button class="chip" id="ordSeq">🔢 In order (1, 2, 3, 4…)</button>
+      </div>
+      <div class="stats">
+        <span>Score <b id="score">0</b> / <b id="asked">0</b></span>
+        <span>Streak <b id="streak">0</b></span>
+        <span>Best streak <b id="best">0</b></span>
+        <button class="btn ghost" id="resetQuiz" style="padding:4px 10px">Reset</button>
+      </div>
+      <div id="qbox"></div>
+    </div>
+  </section>
+
+  <section id="mnemonics">
+    <div class="card">
+      <h2>Mnemonics for the first 20</h2>
+      <p class="muted">The first letters of each word match the element symbols. Learn the sentence, then map it back.</p>
+      <h3>First 5 (H He Li Be B)</h3>
+      <p class="mn"><b>H</b>appy <b>He</b>nry <b>Li</b>kes <b>B</b>aking <b>B</b>uns.</p>
+      <h3>First 10 (… C N O F Ne)</h3>
+      <p class="mn">Happy Henry Likes Baking Buns, <b>C</b>ooks <b>N</b>ice <b>O</b>range <b>F</b>ruit <b>N</b>ightly.</p>
+      <h3>First 20 (… Na Mg Al Si P S Cl Ar K Ca)</h3>
+      <p class="mn"><b>Na</b>ughty <b>Mag</b>pies <b>Al</b>ways <b>Si</b>ng <b>P</b>erfect <b>S</b>ongs <b>Cl</b>early <b>Ar</b>ound <b>K</b>ing's <b>Ca</b>stle.</p>
+      <h3>Chant it in chunks of five</h3>
+      <div class="chunks">
+        <div>H · He · Li · Be · B</div>
+        <div>C · N · O · F · Ne</div>
+        <div>Na · Mg · Al · Si · P</div>
+        <div>S · Cl · Ar · K · Ca</div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Patterns that do the remembering for you</h2>
+      <h3>Rows and columns mean something</h3>
+      <p>A <b>period</b> is a row: every element in it has the same number of electron shells. A <b>group</b> is a column: elements in a group have the same number of outer electrons, so they behave alike.</p>
+      <h3>The groups worth knowing by name</h3>
+      <ul>
+        <li><b>Group 1, alkali metals</b> (Li, Na, K…): soft, react violently with water, get more reactive going down.</li>
+        <li><b>Group 2, alkaline earth metals</b> (Be, Mg, Ca…): reactive, but less so than group 1.</li>
+        <li><b>Group 7 / 17, halogens</b> (F, Cl, Br, I…): reactive non-metals, get <i>less</i> reactive going down.</li>
+        <li><b>Group 0 / 18, noble gases</b> (He, Ne, Ar, Kr…): full outer shell, basically unreactive.</li>
+        <li><b>The middle block, transition metals</b> (Fe, Cu, Zn, Ag, Au…): hard, shiny, coloured compounds, good catalysts.</li>
+      </ul>
+      <h3>Symbols that don't match the English name</h3>
+      <p>They come from Latin: Na = <i>natrium</i> (sodium), K = <i>kalium</i> (potassium), Fe = <i>ferrum</i> (iron), Cu = <i>cuprum</i> (copper), Ag = <i>argentum</i> (silver), Sn = <i>stannum</i> (tin), Au = <i>aurum</i> (gold), Hg = <i>hydrargyrum</i> (mercury), Pb = <i>plumbum</i> (lead), W = <i>wolfram</i> (tungsten), Sb = <i>stibium</i> (antimony).</p>
+      <h3>How to actually learn them</h3>
+      <ol>
+        <li>Pick a range (First 5). Read the Learn cards aloud three times.</li>
+        <li>Hide the names, reveal one at a time. Then hide the symbols.</li>
+        <li>Quiz until you get 10 in a row. Then move to the next range.</li>
+        <li>Finish each session with "Type them in order", the real test.</li>
+        <li>Come back tomorrow and do it again. Spaced repetition beats one long cram.</li>
+      </ol>
+    </div>
+  </section>
+</main>
+
+<script>
+const RAW=`H Hydrogen nm
+He Helium ng
+Li Lithium ak
+Be Beryllium ae
+B Boron md
+C Carbon nm
+N Nitrogen nm
+O Oxygen nm
+F Fluorine hg
+Ne Neon ng
+Na Sodium ak
+Mg Magnesium ae
+Al Aluminium pt
+Si Silicon md
+P Phosphorus nm
+S Sulfur nm
+Cl Chlorine hg
+Ar Argon ng
+K Potassium ak
+Ca Calcium ae
+Sc Scandium tm
+Ti Titanium tm
+V Vanadium tm
+Cr Chromium tm
+Mn Manganese tm
+Fe Iron tm
+Co Cobalt tm
+Ni Nickel tm
+Cu Copper tm
+Zn Zinc tm
+Ga Gallium pt
+Ge Germanium md
+As Arsenic md
+Se Selenium nm
+Br Bromine hg
+Kr Krypton ng
+Rb Rubidium ak
+Sr Strontium ae
+Y Yttrium tm
+Zr Zirconium tm
+Nb Niobium tm
+Mo Molybdenum tm
+Tc Technetium tm
+Ru Ruthenium tm
+Rh Rhodium tm
+Pd Palladium tm
+Ag Silver tm
+Cd Cadmium tm
+In Indium pt
+Sn Tin pt
+Sb Antimony md
+Te Tellurium md
+I Iodine hg
+Xe Xenon ng
+Cs Caesium ak
+Ba Barium ae
+La Lanthanum la
+Ce Cerium la
+Pr Praseodymium la
+Nd Neodymium la
+Pm Promethium la
+Sm Samarium la
+Eu Europium la
+Gd Gadolinium la
+Tb Terbium la
+Dy Dysprosium la
+Ho Holmium la
+Er Erbium la
+Tm Thulium la
+Yb Ytterbium la
+Lu Lutetium la
+Hf Hafnium tm
+Ta Tantalum tm
+W Tungsten tm
+Re Rhenium tm
+Os Osmium tm
+Ir Iridium tm
+Pt Platinum tm
+Au Gold tm
+Hg Mercury tm
+Tl Thallium pt
+Pb Lead pt
+Bi Bismuth pt
+Po Polonium pt
+At Astatine hg
+Rn Radon ng
+Fr Francium ak
+Ra Radium ae
+Ac Actinium ac
+Th Thorium ac
+Pa Protactinium ac
+U Uranium ac
+Np Neptunium ac
+Pu Plutonium ac
+Am Americium ac
+Cm Curium ac
+Bk Berkelium ac
+Cf Californium ac
+Es Einsteinium ac
+Fm Fermium ac
+Md Mendelevium ac
+No Nobelium ac
+Lr Lawrencium ac
+Rf Rutherfordium tm
+Db Dubnium tm
+Sg Seaborgium tm
+Bh Bohrium tm
+Hs Hassium tm
+Mt Meitnerium tm
+Ds Darmstadtium tm
+Rg Roentgenium tm
+Cn Copernicium tm
+Nh Nihonium pt
+Fl Flerovium pt
+Mc Moscovium pt
+Lv Livermorium pt
+Ts Tennessine hg
+Og Oganesson ng`;
+const CAT={ak:'Alkali metal',ae:'Alkaline earth metal',tm:'Transition metal',pt:'Post-transition metal',md:'Metalloid',nm:'Reactive non-metal',hg:'Halogen',ng:'Noble gas',la:'Lanthanide',ac:'Actinide'};
+function pos(n){
+  if(n===1)return{p:1,g:1}; if(n===2)return{p:1,g:18};
+  if(n<=10)return{p:2,g:n<=4?n-2:n+8};
+  if(n<=18)return{p:3,g:n<=12?n-10:n};
+  if(n<=36)return{p:4,g:n-18};
+  if(n<=54)return{p:5,g:n-36};
+  if(n<=56)return{p:6,g:n-54};
+  if(n<=71)return{p:6,g:n-54,row:9};
+  if(n<=86)return{p:6,g:n-68};
+  if(n<=88)return{p:7,g:n-86};
+  if(n<=103)return{p:7,g:n-86,row:10};
+  return{p:7,g:n-100};
+}
+const EL=RAW.trim().split('\n').map((l,i)=>{const [sym,name,cat]=l.trim().split(' ');const n=i+1;const q=pos(n);return{n,sym,name,cat,p:q.p,g:q.g,row:q.row||q.p};});
+
+let range=20, tab='table', mode='n2s';
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const store={get(k,d){try{const v=localStorage.getItem('ptt.'+k);return v===null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem('ptt.'+k,JSON.stringify(v))}catch(e){}}};
+range=store.get('range',20);
+
+/* tabs & range */
+$$('nav button').forEach(b=>b.onclick=()=>{tab=b.dataset.tab;$$('nav button').forEach(x=>x.classList.toggle('on',x===b));$$('main > section').forEach(s=>s.classList.toggle('on',s.id===tab));if(tab==='quiz')newQuestion();});
+function setRange(r){range=r;store.set('range',r);$$('[data-range]').forEach(x=>x.classList.toggle('on',+x.dataset.range===r));renderTable();renderLearn();resetQuiz();}
+$$('[data-range]').forEach(b=>b.onclick=()=>setRange(+b.dataset.range));
+const rangeLabel=()=>range===118?'all 118 elements':`first ${range} elements`;
+
+/* table */
+function renderTable(){
+  const t=$('#ptable');t.innerHTML='';
+  EL.forEach(e=>{
+    const d=document.createElement('div');
+    d.className='el '+e.cat+(e.n>range?' dim':'');
+    d.style.gridColumn=e.g;d.style.gridRow=e.row;
+    d.innerHTML=`<div class="n">${e.n}</div><div class="s">${e.sym}</div><div class="enm">${e.name}</div>`;
+    d.onclick=()=>showDetail(e,d);
+    t.appendChild(d);
+  });
+  $('#tableHint').textContent='· highlighting the '+rangeLabel();
+}
+function showDetail(e,tile){
+  $$('.el.sel').forEach(x=>x.classList.remove('sel'));tile.classList.add('sel');
+  const gname=e.row>7?(e.cat==='la'?'Lanthanide series':'Actinide series'):`Group ${e.g}`;
+  $('#detailCard').innerHTML=`<div class="detail"><div class="big ${e.cat}">${e.sym}</div>
+    <dl><dt>Name</dt><dd><b>${e.name}</b></dd><dt>Atomic number</dt><dd>${e.n}</dd><dt>Type</dt><dd>${CAT[e.cat]}</dd>
+    <dt>Period</dt><dd>${e.p}</dd><dt>Group</dt><dd>${gname}</dd>
+    <dt>In your range?</dt><dd>${e.n<=range?'Yes, learn this one':'Not yet'}</dd></dl></div>`;
+}
+
+/* learn */
+let hideMode='none';
+function renderLearn(){
+  const l=$('#learnlist');l.innerHTML='';
+  EL.slice(0,range).forEach(e=>{
+    const c=document.createElement('div');c.className='lc';
+    c.innerHTML=`<span class="num">${e.n}</span><span class="sym ${hideMode==='syms'?'hid':''}">${e.sym}</span><span class="name ${hideMode==='names'?'hid':''}">${e.name}</span>`;
+    c.onclick=()=>c.querySelectorAll('.hid').forEach(h=>h.classList.toggle('show'));
+    l.appendChild(c);
+  });
+  $('#learnHint').textContent='· '+rangeLabel();
+}
+$('#hideNames').onclick=()=>{hideMode='names';renderLearn()};
+$('#hideSyms').onclick=()=>{hideMode='syms';renderLearn()};
+$('#showAll').onclick=()=>{hideMode='none';renderLearn()};
+
+/* quiz */
+let score=0,asked=0,streak=0,best=store.get('best',0),last=-1,orderIdx=0,orderHits=[],seq=store.get('seq',false),seqIdx=0;
+function setSeq(v){seq=v;store.set('seq',v);$('#ordRandom').classList.toggle('on',!v);$('#ordSeq').classList.toggle('on',v);resetQuiz();}
+$('#ordRandom').onclick=()=>setSeq(false);$('#ordSeq').onclick=()=>setSeq(true);
+$$('[data-mode]').forEach(b=>b.onclick=()=>{mode=b.dataset.mode;$$('[data-mode]').forEach(x=>x.classList.toggle('on',x===b));resetQuiz();});
+function resetQuiz(){score=0;asked=0;streak=0;orderIdx=0;orderHits=[];seqIdx=0;stats();if(tab==='quiz')newQuestion();}
+$('#resetQuiz').onclick=resetQuiz;
+function stats(){$('#score').textContent=score;$('#asked').textContent=asked;$('#streak').textContent=streak;$('#best').textContent=best;$('#quizHint').textContent='· '+rangeLabel();}
+function mark(ok){asked++;if(ok){score++;streak++;if(streak>best){best=streak;store.set('best',best)}}else streak=0;stats();}
+const rnd=a=>a[Math.floor(Math.random()*a.length)];
+function pick(pool){let e;do{e=rnd(pool)}while(pool.length>1&&e.n===last);last=e.n;return e;}
+function newQuestion(){
+  const box=$('#qbox');const pool=EL.slice(0,range);
+  if(mode==='order')return orderQuestion(box,pool);
+  if(seq&&seqIdx>=pool.length){
+    box.innerHTML=`<div class="q">Finished all ${pool.length}! You got <b>${score}</b> right.</div><div class="qsub">Range: ${rangeLabel()}</div><br><button class="btn" id="again">Start again from 1</button>`;
+    $('#again').onclick=()=>{score=0;asked=0;streak=0;seqIdx=0;stats();newQuestion()};return;
+  }
+  const e=seq?pool[seqIdx++]:pick(pool);
+  const progress=seq?` <span class="qsub">(${seqIdx} of ${pool.length})</span>`:'';
+  const others=pool.filter(x=>x!==e).sort(()=>Math.random()-.5).slice(0,3);
+  const opts=[e,...others].sort(()=>Math.random()-.5);
+  const prompt={n2s:[`Element number <b>${e.n}</b>`,'Which symbol?',x=>x.sym],
+                s2n:[`<b>${e.sym}</b>`,'Which element is this?',x=>x.name],
+                n2sym:[`<b>${e.name}</b>`,'What is its symbol?',x=>x.sym]}[mode];
+  box.innerHTML=`<div class="q">${prompt[0]}${progress}</div><div class="qsub">${prompt[1]}</div><div class="opts"></div><div class="feedback"></div>`;
+  const o=box.querySelector('.opts');
+  opts.forEach(x=>{const b=document.createElement('button');b.textContent=prompt[2](x);b.onclick=()=>{
+    if(o.dataset.done)return;o.dataset.done=1;const ok=x===e;mark(ok);
+    b.classList.add(ok?'good':'bad');if(!ok)[...o.children].find(c=>c.textContent===prompt[2](e)).classList.add('good');
+    const f=box.querySelector('.feedback');f.className='feedback '+(ok?'good':'bad');
+    f.textContent=ok?'Correct!':`Nope, ${e.n} is ${e.sym}, ${e.name}.`;
+    setTimeout(newQuestion,ok?600:1600);
+  };o.appendChild(b);});
+}
+function orderQuestion(box,pool){
+  if(orderIdx>=pool.length){
+    box.innerHTML=`<div class="q">Done! ${score} / ${pool.length} in order.</div><div class="chain">${pool.map((e,i)=>`<span class="${orderHits[i]?'ok':'no'}">${e.sym}</span>`).join('')}</div><button class="btn" id="again">Go again</button>`;
+    $('#again').onclick=()=>{orderIdx=0;orderHits=[];score=0;asked=0;streak=0;stats();newQuestion()};return;
+  }
+  const e=pool[orderIdx];
+  box.innerHTML=`<div class="q">Element number <b>${e.n}</b></div><div class="qsub">Type the symbol or the name, then press <kbd>Enter</kbd></div>
+    <div class="chain">${pool.slice(0,orderIdx).map((x,i)=>`<span class="${orderHits[i]?'ok':'no'}">${x.sym}</span>`).join('')}</div>
+    <div class="typed"><input id="ans" autocomplete="off" autocapitalize="off" placeholder="e.g. ${pool[0].sym}"><button class="btn" id="go">Check</button></div><div class="feedback"></div>`;
+  const inp=$('#ans');inp.focus();
+  const check=()=>{const v=inp.value.trim().toLowerCase();if(!v)return;
+    const ok=v===e.sym.toLowerCase()||v===e.name.toLowerCase();mark(ok);orderHits.push(ok);
+    const f=box.querySelector('.feedback');f.className='feedback '+(ok?'good':'bad');
+    f.textContent=ok?`Yes, ${e.sym} ${e.name}.`:`It's ${e.sym}, ${e.name}.`;
+    orderIdx++;inp.disabled=true;setTimeout(newQuestion,ok?500:1500);};
+  $('#go').onclick=check;inp.addEventListener('keydown',ev=>{if(ev.key==='Enter')check()});
+}
+
+/* boot */
+$$('[data-range]').forEach(x=>x.classList.toggle('on',+x.dataset.range===range));
+$('#ordRandom').classList.toggle('on',!seq);$('#ordSeq').classList.toggle('on',seq);
+renderTable();renderLearn();stats();
+</script>
+</body>
+</html>
